@@ -21,7 +21,7 @@ namespace CrawlerRegistroBR
         private static readonly string _resultDirectory = $@"{_currentAssemblyPath}\DadosExtraidos";
         private static readonly string _resultProvisorioDirectory = $@"{_currentAssemblyPath}\DadosExtraidosProvisorio";
         private static readonly int _numberRetryIfReducedInformation = 200;
-        private static readonly int _secondsNextRetry = 5;
+        private static readonly int _secondsNextRetry = 15;
 
         static async Task Main(string[] args)
         {
@@ -154,7 +154,7 @@ namespace CrawlerRegistroBR
             httpClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.92 Safari/537.36");
 
             //default limit = 2
-            ServicePointManager.DefaultConnectionLimit = 1000;
+            ServicePointManager.DefaultConnectionLimit = 5;
             ServicePointManager.ServerCertificateValidationCallback = (a, b, c, d) => true;
 
             return httpClient;
@@ -168,7 +168,6 @@ namespace CrawlerRegistroBR
             int tryCount = 0;
             while (tryAgain)
             {
-                tryAgain = true;
                 try
                 {
                     var values = new FormUrlValueCollection();
@@ -187,8 +186,9 @@ namespace CrawlerRegistroBR
                         if(!html.Contains(string.Format("Recurso {0} inexistente", dominio)) &&
                            !html.Contains(string.Format("O domínio {0} não pode ser registrado por estar aguardando o início do processo de liberação", dominio)))
                         {
-                            if (!html.Contains("Taxa máxima de consultas excedida. Informações reduzidas") && 
-                                !html.Contains("Problema interno"))
+                            if (!html.Contains("Taxa máxima de consultas excedida. Informações reduzidas") &&
+                                !html.Contains("Problema interno") &&
+                                !html.Contains("Erro no servidor, tente novamente mais tarde"))
                             {
                                 var regex = new Regex(@"e-mail:        (.*?)\n", RegexOptions.IgnoreCase);
                                 var matches = regex.Matches(html);
